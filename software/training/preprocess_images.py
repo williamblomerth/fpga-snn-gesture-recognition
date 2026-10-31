@@ -125,7 +125,7 @@ def main() -> None:
     parser.add_argument(
         "--input-dir",
         type=Path,
-        default=Path("data/jester"),
+        default=Path("data/20bn-jester-v1"),
         help=(
             "Directory containing one extracted-frame subdirectory per video."
         ),
@@ -133,7 +133,7 @@ def main() -> None:
     parser.add_argument(
         "--annotations",
         type=Path,
-        default=Path("data/jester-v1-train.csv"),
+        default=Path("data/jester_labels/train.csv"),
         help="Jester annotation CSV with video ID and gesture label columns.",
     )
     parser.add_argument(
