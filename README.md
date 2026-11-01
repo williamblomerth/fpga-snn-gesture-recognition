@@ -1,6 +1,6 @@
 # FPGA SNN Gesture Recognition
 
-This repository contains the Vivado source files for a Zynq-based spiking neural network (SNN) gesture recognition project.
+This repository contains the Vivado source files for a Zynq-based Real time video display project
 
 ## Vivado version compatibility
 
