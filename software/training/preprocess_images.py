@@ -133,7 +133,7 @@ def main() -> None:
     parser.add_argument(
         "--annotations",
         type=Path,
-        default=Path("data/jester_labels/train.csv"),
+        default=Path("data/jester_labels/validation.csv"),
         help="Jester annotation CSV with video ID and gesture label columns.",
     )
     parser.add_argument(
@@ -144,7 +144,7 @@ def main() -> None:
     )
     parser.add_argument(
         "--split",
-        default="train",
+        default="validation",
         help="Output split directory name (for example, train or validation).",
     )
     args = parser.parse_args()

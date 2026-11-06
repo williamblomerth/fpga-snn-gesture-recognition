@@ -26,12 +26,12 @@ class GestureSNN(nn.Module):
 
         spk2_rec = []  # Record output spikes
 
-        # Run SNN over T=32 time steps
+        # Batch this transform because inputs are known for all steps.
+        cur1_rec = self.fc1(x)
         for step in range(num_steps):
-            cur1 = self.fc1(x[step])  # Current input to first layer
-            spk1, mem1 = self.lif1(cur1, mem1)
+            spk1, mem1 = self.lif1(cur1_rec[step], mem1)
             cur2 = self.fc2(spk1)
             spk2, mem2 = self.lif2(cur2, mem2)
             spk2_rec.append(spk2)
 
-        return torch.stack(spk2_rec, dim=0) # [T, Batch, Classes]
+        return torch.stack(spk2_rec, dim=0)  # [T, Batch, Classes]
