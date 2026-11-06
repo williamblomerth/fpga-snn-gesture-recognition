@@ -18,6 +18,10 @@ EXCLUDED_CLASSES = {
     "Shaking Hand",
     "Turning Hand Clockwise",
     "Turning Hand Counterclockwise",
+    "Sliding Two Fingers Down",
+    "Sliding Two Fingers Left",
+    "Sliding Two Fingers Right",
+    "Sliding Two Fingers Up"
 }
 EXCLUDED_CLASSES_NORMALIZED = {label.casefold() for label in EXCLUDED_CLASSES}
 HEADER_NAMES = {"video_id", "video", "id"}
