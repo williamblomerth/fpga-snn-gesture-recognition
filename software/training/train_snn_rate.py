@@ -11,17 +11,21 @@ from snntorch import spikegen
 import snntorch.functional as SF
 from software.training.models.gesture_snn import GestureSNN
 
+LOG_PATH = "software/log/gesture_snn_rate_training_log.txt"
+with open(LOG_PATH, "w", encoding="utf-8") as file:
+    file.write("Gesture SNN Rate Training Output Log\n")
+
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--data-root",
-        default="data/jester_preprocessed/train",
+        default="/project/ece601/EEG_ALS/jester/jester_preprocessed/train/",
         help="ImageFolder root containing the training images.",
     )
     parser.add_argument(
         "--validation-root",
-        default=None,
+        default="/project/ece601/EEG_ALS/jester/jester_preprocessed/validation/",
         help=(
             "ImageFolder root for validation; defaults to a sibling "
             "'validation' directory next to --data-root."
@@ -78,7 +82,7 @@ def evaluate(
             labels = labels.to(device)
             spike_data = spikegen.rate(images, num_steps=num_steps)
             spk_rec = model(spike_data, num_steps=num_steps)
-            loss = criterion(spk_rec, labels)
+            loss = criterion(spk_rec, labels).squeeze()
 
             batch_size = labels.size(0)
             predictions = spk_rec.sum(dim=0).argmax(dim=1)
@@ -151,6 +155,10 @@ def main() -> None:
         f"validation images: {len(validation_dataset)}; "
         f"classes: {len(train_dataset.classes)}; workers: {args.num_workers}"
     )
+    with open(LOG_PATH, "a", encoding="utf-8") as file:
+        file.write(f"Device: {device}; images: {len(train_dataset)}; ")
+        file.write(f"validation images: {len(validation_dataset)}; ")
+        file.write(f"classes: {len(train_dataset.classes)}; workers: {args.num_workers}\n")
     for epoch in range(args.epochs):
         epoch_started = time.perf_counter()
         model.train()
@@ -163,7 +171,7 @@ def main() -> None:
             labels = labels.to(device, non_blocking=pin_memory)
             spike_data = spikegen.rate(images, num_steps=args.num_steps)
             spk_rec = model(spike_data, num_steps=args.num_steps)
-            loss = criterion(spk_rec, labels)
+            loss = criterion(spk_rec, labels).squeeze()
             optimizer.zero_grad(set_to_none=True)
             loss.backward()
             optimizer.step()
@@ -182,6 +190,11 @@ def main() -> None:
             f"Time: {elapsed / 60:.1f} min "
             f"Images/sec: {total_images / elapsed:.1f}"
         )
+        with open(LOG_PATH, "a", encoding="utf-8") as file:
+            file.write(f"Epoch {epoch + 1}/{args.epochs} ")
+            file.write(f"Loss: {mean_loss:.4f} ")
+            file.write(f"Time: {elapsed / 60:.1f} min ")
+            file.write(f"Images/sec: {total_images / elapsed:.1f}\n")
         validation_started = time.perf_counter()
         validation_loss, validation_accuracy = evaluate(
             model,
@@ -198,11 +211,17 @@ def main() -> None:
             f"Accuracy: {validation_accuracy:.2%} "
             f"Time: {validation_elapsed / 60:.1f} min"
         )
+        with open(LOG_PATH, "a", encoding="utf-8") as file:
+            file.write(f"Validation Loss: {validation_loss:.4f} ")
+            file.write(f"Accuracy: {validation_accuracy:.2%} ")
+            file.write(f"Time: {validation_elapsed / 60:.1f} min\n")
 
     output_path = Path(args.output)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     torch.save(model.state_dict(), output_path)
     print(f"Saved model weights to {output_path}")
+    with open(LOG_PATH, "a", encoding="utf-8") as file:
+        file.write(f"Saved model weights to {output_path}")
 
 
 if __name__ == "__main__":
