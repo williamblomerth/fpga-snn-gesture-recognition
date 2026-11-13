@@ -5,6 +5,7 @@ from snntorch import surrogate
 
 # Define surrogate gradient for LIF activation
 spike_grad = surrogate.fast_sigmoid(slope=25)
+BETA = 0.5 # Decay factor for LIF neurons
 
 
 # Build a 2-layer SNN Architecture
@@ -13,11 +14,11 @@ class GestureSNN(nn.Module):
         super().__init__()
         # Input layer: 32x32 = 1024 downsampled pixels -> 128 hidden neurons
         self.fc1 = nn.Linear(1024, 128)
-        self.lif1 = snn.Leaky(beta=0.8, spike_grad=spike_grad)
+        self.lif1 = snn.Leaky(beta=BETA, spike_grad=spike_grad)
 
         # Output layer: 128 hidden neurons -> num_classes gesture classes
         self.fc2 = nn.Linear(128, num_classes)
-        self.lif2 = snn.Leaky(beta=0.8, spike_grad=spike_grad)
+        self.lif2 = snn.Leaky(beta=BETA, spike_grad=spike_grad)
 
     def forward(self, x, num_steps=32):
         # Initialize membrane potentials
