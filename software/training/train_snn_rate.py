@@ -227,6 +227,10 @@ def main() -> None:
         train_dataset,
         **loader_options,
     )
+    train_eval_loader = DataLoader(
+        train_dataset,
+        **{**loader_options, "shuffle": False},
+    )
     validation_loader = DataLoader(
         validation_dataset,
         **{**loader_options, "shuffle": False},
@@ -271,7 +275,6 @@ def main() -> None:
         epoch_started = time.perf_counter()
         model.train()
         total_loss = torch.zeros((), device=device)
-        total_correct = torch.zeros((), device=device)
         total_clips = 0
         for clips, labels in train_loader:
             clips = clips.permute(1, 0, 2, 3, 4).flatten(start_dim=2).to(
@@ -286,28 +289,48 @@ def main() -> None:
 
             batch_size = labels.size(0)
             total_loss += loss.detach() * batch_size
-            predictions = spk_rec.detach().sum(dim=0).argmax(dim=1)
-            total_correct += (predictions == labels).sum()
             total_clips += batch_size
 
         if device.type == "cuda":
             torch.cuda.synchronize(device)
         elapsed = time.perf_counter() - epoch_started
-        mean_loss = (total_loss / total_clips).item()
-        train_accuracy = (total_correct / total_clips).item()
         print(
             f"Epoch {epoch + 1}/{args.epochs} "
-            f"Loss: {mean_loss:.4f} "
-            f"Train accuracy: {train_accuracy:.2%} "
+            f"Optimization loss: {(total_loss / total_clips).item():.4f} "
             f"Time: {elapsed / 60:.1f} min "
             f"Clips/sec: {total_clips / elapsed:.1f}"
         )
         with LOG_PATH.open("a", encoding="utf-8") as file:
             file.write(f"Epoch {epoch + 1}/{args.epochs} ")
-            file.write(f"Loss: {mean_loss:.4f} ")
-            file.write(f"Train accuracy: {train_accuracy:.2%} ")
+            file.write(
+                f"Optimization loss: {(total_loss / total_clips).item():.4f} "
+            )
             file.write(f"Time: {elapsed / 60:.1f} min ")
             file.write(f"Clips/sec: {total_clips / elapsed:.1f}\n")
+
+        train_eval_started = time.perf_counter()
+        train_loss, train_accuracy = evaluate(
+            model,
+            train_eval_loader,
+            criterion,
+            device,
+            args.num_frames,
+        )
+        if device.type == "cuda":
+            torch.cuda.synchronize(device)
+        train_eval_elapsed = time.perf_counter() - train_eval_started
+        print(
+            f"Training Loss: {train_loss:.4f} "
+            f"Accuracy: {train_accuracy:.2%} "
+            f"Evaluation time: {train_eval_elapsed / 60:.1f} min"
+        )
+        with LOG_PATH.open("a", encoding="utf-8") as file:
+            file.write(f"Training Loss: {train_loss:.4f} ")
+            file.write(f"Accuracy: {train_accuracy:.2%} ")
+            file.write(
+                f"Evaluation time: {train_eval_elapsed / 60:.1f} min\n"
+            )
+
         validation_started = time.perf_counter()
         validation_loss, validation_accuracy = evaluate(
             model,
