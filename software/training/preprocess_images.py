@@ -118,8 +118,8 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description=(
             "Convert extracted Jester video frames into labeled 32x32 "
-            "grayscale PNGs suitable for loading with "
-            "torchvision.datasets.ImageFolder."
+            "grayscale PNGs organized by class and video clip for "
+            "sequence-based training."
         )
     )
     parser.add_argument(
