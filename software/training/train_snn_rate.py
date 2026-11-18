@@ -14,6 +14,7 @@ from software.training.models.gesture_snn import GestureSNN
 
 LOG_PATH = Path("software/log/gesture_snn_rate_training_log.txt")
 IMAGE_SUFFIXES = {".jpg", ".jpeg", ".png", ".bmp"}
+LEARN_RATE = 3e-4
 
 
 def sample_frame_indices(frame_count: int, num_frames: int) -> list[int]:
@@ -237,7 +238,7 @@ def main() -> None:
     )
 
     model = GestureSNN(num_classes=len(train_dataset.classes)).to(device)
-    optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
+    optimizer = torch.optim.Adam(model.parameters(), lr=LEARN_RATE)
     criterion = SF.ce_rate_loss()
     train_class_counts = Counter(train_dataset.targets)
     majority_class = max(
@@ -356,7 +357,14 @@ def main() -> None:
 
     output_path = Path(args.output)
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    torch.save(model.state_dict(), output_path)
+    torch.save(
+        {
+            "model_state_dict": model.state_dict(),
+            "classes": train_dataset.classes,
+            "num_frames": args.num_frames,
+        },
+        output_path,
+    )
     print(f"Saved model weights to {output_path}")
     with LOG_PATH.open("a", encoding="utf-8") as file:
         file.write(f"Saved model weights to {output_path}")

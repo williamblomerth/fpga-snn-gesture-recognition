@@ -5,7 +5,7 @@ from snntorch import surrogate
 
 # Define surrogate gradient for LIF activation
 spike_grad = surrogate.fast_sigmoid(slope=25)
-BETA = 0.5 # Decay factor for LIF neurons
+BETA = 0.9# Decay factor for LIF neurons
 
 
 # Build a 2-layer SNN Architecture
